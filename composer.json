@@ -1,0 +1,31 @@
+{
+    "name": "flowrise-hms/ai",
+    "type": "laravel-module",
+    "description": "AI assistant, agents, and documentation copilot for FlowRise HMS",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "flowrise-hms/core": "dev-main",
+        "laravel/ai": "^0.9"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\AI\\": "app/",
+            "Modules\\AI\\Database\\Factories\\": "database/factories/",
+            "Modules\\AI\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\AI\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

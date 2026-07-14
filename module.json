@@ -1,0 +1,14 @@
+{
+    "name": "AI",
+    "alias": "ai",
+    "description": "FlowRise AI assistant with role-aware agents, documentation copilot, and clinical workflows.",
+    "keywords": ["hms", "ai", "assistant", "copilot"],
+    "priority": 5,
+    "providers": [
+        "Modules\\AI\\Providers\\AIServiceProvider"
+    ],
+    "files": [],
+    "requires": [
+        "Modules\\Core"
+    ]
+}

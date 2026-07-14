@@ -1,0 +1,346 @@
+.flowrise-assistant {
+    position: relative;
+    z-index: 45;
+}
+
+.flowrise-assistant__fab {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background-color: var(--primary-600);
+    color: #fff;
+    box-shadow:
+        0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.flowrise-assistant__fab:hover {
+    background-color: var(--primary-500);
+}
+
+.flowrise-assistant__fab:focus-visible {
+    outline: 2px solid var(--primary-400);
+    outline-offset: 2px;
+}
+
+.flowrise-assistant__fab-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.flowrise-assistant__panel {
+    position: fixed;
+    z-index: 45;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    background-color: var(--gray-50);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.dark .flowrise-assistant__panel {
+    border-color: var(--gray-700);
+    background-color: var(--gray-900);
+}
+
+.flowrise-assistant__panel--compact {
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: min(24rem, calc(100vw - 2rem));
+    max-height: min(32rem, calc(100vh - 3rem));
+    border-radius: 1rem;
+}
+
+.flowrise-assistant__panel--expanded {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(36rem, calc(100vw - 1rem));
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 0;
+}
+
+.flowrise-assistant__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0.75rem 1rem;
+    min-width: 0;
+}
+
+.dark .flowrise-assistant__header {
+    border-bottom-color: var(--gray-700);
+}
+
+.flowrise-assistant__header-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.flowrise-assistant__title {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-950);
+}
+
+.dark .flowrise-assistant__title {
+    color: #fff;
+}
+
+.flowrise-assistant__subtitle {
+    margin: 0.125rem 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+}
+
+.flowrise-assistant__actions {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.125rem;
+}
+
+.flowrise-assistant__icon-action {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--gray-600);
+    cursor: pointer;
+}
+
+.flowrise-assistant__icon-action:hover {
+    background-color: var(--gray-100);
+}
+
+.dark .flowrise-assistant__icon-action {
+    color: var(--gray-300);
+}
+
+.dark .flowrise-assistant__icon-action:hover {
+    background-color: var(--gray-800);
+}
+
+.flowrise-assistant__icon-action-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.flowrise-assistant__messages {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    padding: 0.75rem 1rem;
+}
+
+.flowrise-assistant__message {
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.flowrise-assistant__message--user {
+    margin-left: 2rem;
+    background-color: var(--primary-50);
+    color: var(--gray-950);
+}
+
+.dark .flowrise-assistant__message--user {
+    background-color: var(--primary-950);
+    color: #fff;
+}
+
+.flowrise-assistant__message--assistant {
+    margin-right: 1rem;
+    background-color: var(--gray-100);
+    color: var(--gray-800);
+}
+
+.dark .flowrise-assistant__message--assistant {
+    background-color: var(--gray-800);
+    color: var(--gray-100);
+}
+
+.flowrise-assistant__empty {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.flowrise-assistant__empty-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.flowrise-assistant__prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.flowrise-assistant__prompt {
+    border: 1px solid var(--gray-200);
+    border-radius: 9999px;
+    background-color: #fff;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-700);
+    cursor: pointer;
+}
+
+.flowrise-assistant__prompt:hover {
+    border-color: var(--primary-300);
+    background-color: var(--primary-50);
+}
+
+.dark .flowrise-assistant__prompt {
+    border-color: var(--gray-700);
+    background-color: var(--gray-900);
+    color: var(--gray-200);
+}
+
+.flowrise-assistant__proposal {
+    margin-top: 0.75rem;
+    border: 1px solid var(--warning-200);
+    border-radius: 0.5rem;
+    background-color: var(--warning-50);
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--warning-950);
+}
+
+.flowrise-assistant__proposal-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.flowrise-assistant__approve {
+    border: none;
+    border-radius: 0.375rem;
+    background-color: var(--primary-600);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+}
+
+.flowrise-assistant__approve:hover {
+    background-color: var(--primary-500);
+}
+
+.flowrise-assistant__cancel {
+    border: 1px solid var(--gray-300);
+    border-radius: 0.375rem;
+    background: transparent;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+}
+
+.flowrise-assistant__composer {
+    display: flex;
+    gap: 0.5rem;
+    border-top: 1px solid var(--gray-200);
+    padding: 0.75rem;
+}
+
+.dark .flowrise-assistant__composer {
+    border-top-color: var(--gray-700);
+}
+
+.flowrise-assistant__input {
+    width: 100%;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--gray-950);
+    background-color: #fff;
+}
+
+.dark .flowrise-assistant__input {
+    border-color: var(--gray-600);
+    background-color: var(--gray-800);
+    color: #fff;
+}
+
+.flowrise-assistant__input:focus {
+    outline: 2px solid var(--primary-500);
+    outline-offset: 0;
+}
+
+.flowrise-assistant__send {
+    flex-shrink: 0;
+    border: none;
+    border-radius: 0.75rem;
+    background-color: var(--primary-600);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+}
+
+.flowrise-assistant__send:hover {
+    background-color: var(--primary-500);
+}
+
+.flowrise-assistant__send:disabled,
+.flowrise-assistant__input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.flowrise-assistant__thinking {
+    margin-right: 1rem;
+    border-radius: 0.75rem;
+    background-color: var(--gray-100);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+.dark .flowrise-assistant__thinking {
+    background-color: var(--gray-800);
+    color: var(--gray-300);
+}
