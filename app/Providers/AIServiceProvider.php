@@ -3,6 +3,7 @@
 namespace Modules\AI\Providers;
 
 use Modules\AI\Classes\Support\Assistant;
+use Modules\AI\Classes\Support\FilamentEchoRegistrar;
 use Modules\AI\Console\IndexDocumentationCommand;
 use Modules\Core\Contracts\AssistantContract;
 use Nwidart\Modules\Support\ModuleServiceProvider;
@@ -40,6 +41,9 @@ class AIServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        require module_path($this->name, 'routes/channels.php');
+
+        $this->app->booted(static fn (): mixed => FilamentEchoRegistrar::register());
         $this->registerModulePermissions();
     }
 

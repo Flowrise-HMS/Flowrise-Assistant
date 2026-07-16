@@ -45,6 +45,7 @@ Rules:
 - Clinical suggestions are advisory only — the clinician decides.
 - Respect branch context and user permissions.
 - If a module or permission is unavailable, explain clearly and suggest alternatives.
+- Write for busy hospital staff: clear plain language first. Prefer short paragraphs and simple bullet lists over heavy markdown (no large headings, tables, or code fences unless the user asks for technical detail).
 INSTRUCTIONS;
     }
 

@@ -8,6 +8,9 @@
         "flowrise-hms/core": "dev-main",
         "laravel/ai": "^0.9"
     },
+    "suggest": {
+        "laravel/reverb": "Required on the host app for expanded assistant realtime streaming over WebSockets."
+    },
     "extra": {
         "laravel": {
             "providers": [],

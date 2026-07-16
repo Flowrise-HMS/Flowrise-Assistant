@@ -13,18 +13,14 @@
         <meta name="keywords" content="{{ $keywords ?? '' }}">
         <meta name="author" content="{{ $author ?? '' }}">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        {{-- Vite CSS --}}
-        {{-- {{ module_vite('build-ai', 'resources/assets/sass/app.scss') }} --}}
+        {{-- This host uses central Vite (root vite.config.js + vite-module-loader). Do not also use module_vite('build-ai'). --}}
+        {{-- @vite(['Modules/AI/resources/assets/css/assistant-widget.css']) --}}
     </head>
 
     <body>
         {{ $slot }}
-
-        {{-- Vite JS --}}
-        {{-- {{ module_vite('build-ai', 'resources/assets/js/app.js') }} --}}
     </body>
 </html>

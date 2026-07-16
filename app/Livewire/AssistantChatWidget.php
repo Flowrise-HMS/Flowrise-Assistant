@@ -88,14 +88,8 @@ class AssistantChatWidget extends Component
 
         $this->messages[] = ['role' => 'user', 'content' => $text];
         $this->message = '';
-
-        if ($this->layout === 'expanded') {
-            $this->dispatch('assistant-stream-request', message: $text, conversationId: $this->conversationId);
-
-            return;
-        }
-
-        $this->sendBlocking($text);
+        $this->isThinking = true;
+        $this->dispatch('assistant-turn-request', message: $text, conversationId: $this->conversationId);
     }
 
     public function sendBlocking(string $text): void
@@ -156,13 +150,15 @@ class AssistantChatWidget extends Component
 
     public function markStreamError(string $partial = ''): void
     {
-        if ($partial !== '') {
-            $this->appendAssistantMessage($partial);
+        $message = trim($partial);
+
+        if ($message === '') {
+            $message = __('The assistant could not finish this reply. Please try again.');
         }
 
         $this->messages[] = [
             'role' => 'assistant',
-            'content' => __('Streaming was interrupted. You can retry or switch to compact mode.'),
+            'content' => $message,
         ];
         $this->isThinking = false;
     }

@@ -73,31 +73,25 @@ class AssistantChatWidgetTest extends AITestCase
             ->assertSet('message', '');
     }
 
-    public function test_compact_send_appends_assistant_response_from_orchestrator(): void
+    public function test_compact_send_dispatches_turn_request_for_streaming(): void
     {
         $user = $this->assistantUser();
         $this->actingAs($user);
 
         $this->mock(AssistantOrchestratorService::class, function ($mock): void {
-            $mock->shouldReceive('prompt')
-                ->once()
-                ->andReturn([
-                    'text' => 'I can help with documentation.',
-                    'conversation_id' => 'conv-abc',
-                ]);
+            $mock->shouldNotReceive('prompt');
         });
 
         Livewire::test(AssistantChatWidget::class)
             ->call('open')
             ->set('message', 'What can you do?')
             ->call('send')
-            ->assertSet('conversationId', 'conv-abc')
-            ->assertSet('isThinking', false)
+            ->assertSet('isThinking', true)
             ->assertSee('What can you do?')
-            ->assertSee('I can help with documentation.');
+            ->assertDispatched('assistant-turn-request', message: 'What can you do?', conversationId: null);
     }
 
-    public function test_expanded_send_dispatches_stream_request_instead_of_blocking_prompt(): void
+    public function test_expanded_send_dispatches_turn_request_instead_of_blocking_prompt(): void
     {
         $user = $this->assistantUser();
         $this->actingAs($user);
@@ -111,7 +105,21 @@ class AssistantChatWidgetTest extends AITestCase
             ->call('toggleExpand')
             ->set('message', 'Stream this')
             ->call('send')
-            ->assertDispatched('assistant-stream-request', message: 'Stream this', conversationId: null);
+            ->assertSet('isThinking', true)
+            ->assertDispatched('assistant-turn-request', message: 'Stream this', conversationId: null);
+    }
+
+    public function test_mark_stream_error_shows_provider_message_once(): void
+    {
+        $user = $this->assistantUser();
+        $this->actingAs($user);
+
+        Livewire::test(AssistantChatWidget::class)
+            ->call('open')
+            ->call('markStreamError', 'The Gemini model is temporarily overloaded. Please try again in a few minutes.')
+            ->assertSet('isThinking', false)
+            ->assertSee('The Gemini model is temporarily overloaded. Please try again in a few minutes.')
+            ->assertDontSee('Streaming was interrupted');
     }
 
     public function test_confirmation_proposal_can_be_approved_or_cancelled(): void

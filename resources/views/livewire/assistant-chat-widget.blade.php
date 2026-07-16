@@ -1,9 +1,11 @@
 <div
     x-data="assistantChatWidget({
-        streamUrl: @js(route('ai.assistant.stream')),
+        turnUrl: @js(route('ai.assistant.turn')),
         csrfToken: @js(csrf_token()),
+        userId: @js(auth()->id()),
     })"
-    x-on:assistant-stream-request.window="streamMessage($event.detail.message, $event.detail.conversationId)"
+    x-init="boot()"
+    x-on:assistant-turn-request.window="startTurn($event.detail.message, $event.detail.conversationId)"
     class="flowrise-assistant"
 >
     @if ($layout === 'closed')
@@ -70,7 +72,13 @@
                         'flowrise-assistant__message--user' => $entry['role'] === 'user',
                         'flowrise-assistant__message--assistant' => $entry['role'] === 'assistant',
                     ])>
-                        <div>{{ $entry['content'] }}</div>
+                        @if ($entry['role'] === 'assistant')
+                            <div class="flowrise-assistant__markdown">
+                                {!! \Modules\AI\Classes\Support\AssistantMarkdown::toHtml($entry['content']) !!}
+                            </div>
+                        @else
+                            <div class="flowrise-assistant__plain">{{ $entry['content'] }}</div>
+                        @endif
 
                         @if (! empty($entry['proposal']))
                             <div class="flowrise-assistant__proposal">
@@ -116,16 +124,20 @@
                     </div>
                 @endforelse
 
-                <div x-show="streaming" x-cloak class="flowrise-assistant__message flowrise-assistant__message--assistant">
-                    <span x-text="streamBuffer"></span>
-                    <span class="inline-block animate-pulse">▍</span>
+                <div
+                    x-show="streaming"
+                    x-cloak
+                    class="flowrise-assistant__message flowrise-assistant__message--assistant flowrise-assistant__message--streaming"
+                >
+                    <template x-if="streamBuffer.length === 0">
+                        <div class="flowrise-assistant__status" x-text="statusLabel"></div>
+                    </template>
+                    <template x-if="streamBuffer.length > 0">
+                        <div>
+                            <span x-text="streamBuffer"></span><span class="flowrise-assistant__cursor" aria-hidden="true"></span>
+                        </div>
+                    </template>
                 </div>
-
-                @if ($isThinking && $layout !== 'expanded')
-                    <div class="flowrise-assistant__thinking">
-                        {{ __('Thinking…') }}
-                    </div>
-                @endif
             </div>
 
             <form wire:submit="send" class="flowrise-assistant__composer">
@@ -151,24 +163,55 @@
 @script
 <script>
     Alpine.data('assistantChatWidget', (config) => ({
-        streamUrl: config.streamUrl,
+        turnUrl: config.turnUrl,
         csrfToken: config.csrfToken,
+        userId: config.userId,
         streaming: false,
         streamBuffer: '',
+        statusLabel: @js(__('Thinking…')),
+        activeTurnId: null,
+        userChannel: null,
+        conversationChannel: null,
 
-        async streamMessage(message, conversationId) {
+        boot() {
+            if (! window.Echo || ! this.userId) {
+                return;
+            }
+
+            this.userChannel = window.Echo.private(`ai.user.${this.userId}`)
+                .listen('.assistant.turn.started', (event) => this.onTurnStarted(event))
+                .listen('.assistant.token_chunk', (event) => this.onTokenChunk(event))
+                .listen('.assistant.turn.completed', (event) => this.onTurnCompleted(event))
+                .listen('.assistant.turn.failed', (event) => this.onTurnFailed(event));
+        },
+
+        async startTurn(message, conversationId) {
             this.streaming = true;
             this.streamBuffer = '';
+            this.statusLabel = @js(__('Thinking…'));
+            this.activeTurnId = null;
             $wire.beginThinking();
+            queueMicrotask(() => this.scrollToBottom());
+
+            if (! window.Echo) {
+                $wire.markStreamError(@js(__('Realtime connection is unavailable. Refresh the page and ensure Reverb is running.')));
+                this.resetStreamState();
+                return;
+            }
 
             try {
-                const response = await fetch(this.streamUrl, {
+                if (conversationId) {
+                    this.subscribeConversation(conversationId);
+                }
+
+                const response = await fetch(this.turnUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'text/event-stream',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': this.csrfToken,
                         'X-Requested-With': 'XMLHttpRequest',
+                        ...(window.Echo.socketId() ? { 'X-Socket-ID': window.Echo.socketId() } : {}),
                     },
                     body: JSON.stringify({
                         message,
@@ -177,51 +220,93 @@
                     credentials: 'same-origin',
                 });
 
-                if (!response.ok || !response.body) {
-                    throw new Error('Stream failed');
+                if (! response.ok) {
+                    throw new Error('Turn failed');
                 }
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
+                const payload = await response.json();
+                this.activeTurnId = payload.turn_id;
+                this.statusLabel = @js(__('Generating response…'));
 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        break;
-                    }
-
-                    buffer += decoder.decode(value, { stream: true });
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() ?? '';
-
-                    for (const line of lines) {
-                        if (!line.startsWith('data:')) {
-                            continue;
-                        }
-
-                        const payload = line.slice(5).trim();
-                        if (payload === '' || payload === '[DONE]') {
-                            continue;
-                        }
-
-                        try {
-                            const event = JSON.parse(payload);
-                            if (event.type === 'text-delta' && event.delta) {
-                                this.streamBuffer += event.delta;
-                            }
-                        } catch (error) {
-                            // Ignore malformed stream chunks.
-                        }
-                    }
+                if (payload.conversation_id) {
+                    this.subscribeConversation(payload.conversation_id);
                 }
-
-                $wire.appendStreamedAssistantMessage(this.streamBuffer, conversationId);
             } catch (error) {
-                $wire.markStreamError(this.streamBuffer);
-            } finally {
-                this.streaming = false;
-                this.streamBuffer = '';
+                $wire.markStreamError(@js(__('Could not start the assistant turn. Please try again.')));
+                this.resetStreamState();
+            }
+        },
+
+        subscribeConversation(conversationId) {
+            if (! window.Echo || ! conversationId) {
+                return;
+            }
+
+            if (this.conversationChannel && this.conversationChannel !== conversationId) {
+                window.Echo.leave(`ai.conversation.${this.conversationChannel}`);
+            }
+
+            this.conversationChannel = conversationId;
+            window.Echo.private(`ai.conversation.${conversationId}`)
+                .listen('.assistant.turn.started', (event) => this.onTurnStarted(event))
+                .listen('.assistant.token_chunk', (event) => this.onTokenChunk(event))
+                .listen('.assistant.turn.completed', (event) => this.onTurnCompleted(event))
+                .listen('.assistant.turn.failed', (event) => this.onTurnFailed(event));
+        },
+
+        onTurnStarted(event) {
+            if (this.activeTurnId && event.turn_id && event.turn_id !== this.activeTurnId) {
+                return;
+            }
+
+            this.streaming = true;
+            this.statusLabel = @js(__('Generating response…'));
+            this.scrollToBottom();
+        },
+
+        onTokenChunk(event) {
+            if (this.activeTurnId && event.turn_id && event.turn_id !== this.activeTurnId) {
+                return;
+            }
+
+            this.streaming = true;
+            this.streamBuffer += event.delta ?? '';
+            this.scrollToBottom();
+        },
+
+        onTurnCompleted(event) {
+            if (this.activeTurnId && event.turn_id && event.turn_id !== this.activeTurnId) {
+                return;
+            }
+
+            const text = event.text || this.streamBuffer;
+            $wire.appendStreamedAssistantMessage(text, event.conversation_id ?? null);
+            this.resetStreamState();
+            queueMicrotask(() => this.scrollToBottom());
+        },
+
+        onTurnFailed(event) {
+            if (this.activeTurnId && event.turn_id && event.turn_id !== this.activeTurnId) {
+                return;
+            }
+
+            const message = (event.message || '').trim() || this.streamBuffer;
+            $wire.markStreamError(message);
+            this.resetStreamState();
+            queueMicrotask(() => this.scrollToBottom());
+        },
+
+        resetStreamState() {
+            this.streaming = false;
+            this.streamBuffer = '';
+            this.statusLabel = @js(__('Thinking…'));
+            this.activeTurnId = null;
+        },
+
+        scrollToBottom() {
+            const el = document.getElementById('assistant-messages');
+            if (el) {
+                el.scrollTop = el.scrollHeight;
             }
         },
     }));
