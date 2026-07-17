@@ -190,7 +190,6 @@
             this.streamBuffer = '';
             this.statusLabel = @js(__('Thinking…'));
             this.activeTurnId = null;
-            $wire.beginThinking();
             queueMicrotask(() => this.scrollToBottom());
 
             if (! window.Echo) {

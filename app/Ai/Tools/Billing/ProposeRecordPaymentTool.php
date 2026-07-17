@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\AI\Classes\Support\Feature;
 use Modules\Billing\Models\Invoice;
 use Stringable;
@@ -29,7 +30,7 @@ class ProposeRecordPaymentTool implements Tool
             return $this->moduleUnavailable('billing');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'propose_record_payment')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'propose_record_payment')) {
             return $this->denial('propose_record_payment');
         }
 

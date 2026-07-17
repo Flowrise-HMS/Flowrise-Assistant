@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\AI\Classes\Support\Feature;
 use Modules\Appointment\Classes\Services\AppointmentSchedulingService;
 use Modules\Appointment\Enums\AppointmentStatus;
@@ -30,7 +31,7 @@ class ExecuteScheduleAppointmentTool implements Tool
             return $this->moduleUnavailable('appointment');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'execute_schedule_appointment')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'execute_schedule_appointment')) {
             return $this->denial('execute_schedule_appointment');
         }
 

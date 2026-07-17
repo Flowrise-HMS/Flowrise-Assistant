@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\AI\Classes\Support\Feature;
 use Modules\Clinical\Classes\Services\VitalSignService;
 use Modules\Patient\Models\Patient;
@@ -30,7 +31,7 @@ class ExecuteRecordVitalsTool implements Tool
             return $this->moduleUnavailable('clinical');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'execute_record_vitals')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'execute_record_vitals')) {
             return $this->denial('execute_record_vitals');
         }
 

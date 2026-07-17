@@ -36,7 +36,7 @@ class AssistantTurnController
             'conversation_id' => $conversationId,
         ], $user->id, $conversationId);
 
-        StreamAssistantTurnJob::dispatch(
+        StreamAssistantTurnJob::dispatchSync(
             userId: $user->getAuthIdentifier(),
             message: $validated['message'],
             turnId: $turnId,

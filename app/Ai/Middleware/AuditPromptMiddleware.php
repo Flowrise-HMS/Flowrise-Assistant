@@ -3,9 +3,11 @@
 namespace Modules\AI\Ai\Middleware;
 
 use Closure;
+use Illuminate\Support\Str;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Modules\AI\Classes\Services\AssistantAuditService;
 use Modules\AI\Classes\Services\PhiRedactionService;
+use Modules\Core\Models\CoreUser;
 
 class AuditPromptMiddleware
 {
@@ -23,9 +25,9 @@ class AuditPromptMiddleware
         return $response->then(function ($agentResponse) use ($prompt, $startedAt) {
             $user = auth()->user();
 
-            if (! $user instanceof \Modules\Core\Models\CoreUser
+            if (! $user instanceof CoreUser
                 && property_exists($prompt->agent, 'user')
-                && $prompt->agent->user instanceof \Modules\Core\Models\CoreUser) {
+                && $prompt->agent->user instanceof CoreUser) {
                 $user = $prompt->agent->user;
             }
 
@@ -36,7 +38,7 @@ class AuditPromptMiddleware
             $this->auditService->log(
                 user: $user,
                 promptRedacted: $this->redactor->redact($prompt->prompt),
-                responseSummary: \Illuminate\Support\Str::limit((string) $agentResponse->text, 500),
+                responseSummary: Str::limit((string) $agentResponse->text, 500),
                 latencyMs: (int) round((microtime(true) - $startedAt) * 1000),
             );
         });

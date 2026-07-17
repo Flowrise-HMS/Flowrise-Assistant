@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\Patient\Models\Patient;
 use Stringable;
 
@@ -24,7 +25,7 @@ class ProposeRecordVitalsTool implements Tool
             return $this->moduleUnavailable('clinical');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'propose_record_vitals')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'propose_record_vitals')) {
             return $this->denial('propose_record_vitals');
         }
 

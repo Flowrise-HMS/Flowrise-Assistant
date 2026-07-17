@@ -7,6 +7,7 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
 use Modules\AI\Classes\Services\EmbeddingSearchService;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\Core\Models\Service;
 use Stringable;
 
@@ -25,7 +26,7 @@ class SearchServicesTool implements Tool
             return $this->moduleUnavailable('clinical');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'search_services')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'search_services')) {
             return $this->denial('search_services');
         }
 

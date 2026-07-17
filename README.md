@@ -2,7 +2,9 @@
 
 FlowRise assistant (agents, tools, documentation copilot).
 
-Depends on **Core** (`flowrise-hms/core`) and Laravel AI. Remains installable beside Core without project-root PHP/config edits.
+**Status:** Complete — see [Module Status](../../docs/shared/module-status.md).
+
+Depends on **Core** (`flowrise-hms/core`) and Laravel AI.
 
 ## Assets (Laravel Modules + Vite)
 

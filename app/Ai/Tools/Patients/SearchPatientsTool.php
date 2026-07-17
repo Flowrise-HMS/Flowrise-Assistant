@@ -7,6 +7,7 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
 use Modules\AI\Classes\Services\PhiRedactionService;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\Patient\Classes\Services\PatientSearchService;
 use Stringable;
 
@@ -25,7 +26,7 @@ class SearchPatientsTool implements Tool
             return $this->moduleUnavailable('patient');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'search_patients')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'search_patients')) {
             return $this->denial('search_patients');
         }
 

@@ -3,12 +3,12 @@
 namespace Modules\AI\Livewire;
 
 use Illuminate\Contracts\View\View;
+use Laravel\Ai\Exceptions\ProviderOverloadedException;
+use Laravel\Ai\Exceptions\RateLimitedException;
 use Livewire\Component;
 use Modules\AI\Classes\Services\AssistantOrchestratorService;
 use Modules\AI\Classes\Services\AssistantProposalExecutor;
 use Modules\AI\Classes\Services\AssistantQuickPromptService;
-use Laravel\Ai\Exceptions\ProviderOverloadedException;
-use Laravel\Ai\Exceptions\RateLimitedException;
 use Modules\AI\Classes\Support\AssistantPermission;
 use Modules\AI\Classes\Support\Feature;
 use Modules\Core\Contracts\AssistantContract;
@@ -31,6 +31,14 @@ class AssistantChatWidget extends Component
     {
         if (! $this->isAvailable()) {
             return;
+        }
+
+        // Restore layout state and active conversation ID from session to persist sessions across page loads
+        $this->layout = (string) session('ai_assistant_layout', 'closed');
+        $this->conversationId = session('ai_assistant_conversation_id');
+
+        if ($this->conversationId) {
+            $this->loadMessagesFromHistory();
         }
     }
 
@@ -239,7 +247,38 @@ class AssistantChatWidget extends Component
             return '<div></div>';
         }
 
+        // Sync active UI layout and conversation ID to session right before rendering
+        session(['ai_assistant_layout' => $this->layout]);
+        session(['ai_assistant_conversation_id' => $this->conversationId]);
+
         return view('ai::livewire.assistant-chat-widget');
+    }
+
+    protected function loadMessagesFromHistory(): void
+    {
+        $messagesTable = config('ai.conversations.tables.messages', 'agent_conversation_messages');
+
+        $messages = \Illuminate\Support\Facades\DB::table($messagesTable)
+            ->where('conversation_id', $this->conversationId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $this->messages = $messages->map(function ($msg) {
+            if ($msg->role === 'assistant') {
+                $proposal = $this->extractProposal($msg->content);
+                return [
+                    'role' => 'assistant',
+                    'content' => $proposal['message'] ?? $msg->content,
+                    'proposal' => $proposal['data'] ?? null,
+                ];
+            }
+
+            return [
+                'role' => $msg->role,
+                'content' => $msg->content,
+                'proposal' => null,
+            ];
+        })->toArray();
     }
 
     protected function appendAssistantMessage(string $response): void

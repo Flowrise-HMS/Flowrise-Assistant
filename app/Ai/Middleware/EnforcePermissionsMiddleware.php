@@ -4,8 +4,8 @@ namespace Modules\AI\Ai\Middleware;
 
 use Closure;
 use Laravel\Ai\Prompts\AgentPrompt;
-use Modules\AI\Classes\Support\AssistantPermission;
 use Modules\AI\Classes\Services\UserCapabilityProfile;
+use Modules\AI\Classes\Support\AssistantPermission;
 use Modules\Core\Models\CoreUser;
 
 class EnforcePermissionsMiddleware

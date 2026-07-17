@@ -165,6 +165,47 @@ class AssistantChatWidgetTest extends AITestCase
             ->assertSee(__('Action cancelled.'));
     }
 
+    public function test_widget_persists_session_and_loads_history(): void
+    {
+        $user = $this->assistantUser();
+        $this->actingAs($user);
+
+        // Put active conversation and layout in session
+        session([
+            'ai_assistant_layout' => 'expanded',
+            'ai_assistant_conversation_id' => 'conv-test-999',
+        ]);
+
+        // Insert dummy message to the db message table
+        $messagesTable = config('ai.conversations.tables.messages', 'agent_conversation_messages');
+        \Illuminate\Support\Facades\DB::table($messagesTable)->insert([
+            'id' => 'msg-test-1',
+            'conversation_id' => 'conv-test-999',
+            'user_id' => $user->id,
+            'agent' => 'flow_rise_assistant',
+            'role' => 'user',
+            'content' => 'Hello AI',
+            'attachments' => '[]',
+            'tool_calls' => '[]',
+            'tool_results' => '[]',
+            'usage' => '[]',
+            'meta' => '[]',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Livewire::test(AssistantChatWidget::class)
+            ->assertSet('layout', 'expanded')
+            ->assertSet('conversationId', 'conv-test-999')
+            ->assertSet('messages.0.role', 'user')
+            ->assertSet('messages.0.content', 'Hello AI')
+            // Toggle to closed and assert it's updated in session on render
+            ->call('close')
+            ->assertSet('layout', 'closed');
+
+        $this->assertEquals('closed', session('ai_assistant_layout'));
+    }
+
     protected function assistantUser(bool $grantPermission = true): User
     {
         $branch = Branch::factory()->create();

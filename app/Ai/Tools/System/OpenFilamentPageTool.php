@@ -3,6 +3,7 @@
 namespace Modules\AI\Ai\Tools\System;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Illuminate\Support\Facades\Route;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
@@ -35,7 +36,7 @@ class OpenFilamentPageTool implements Tool
         $pageKey = (string) ($request['page_key'] ?? '');
         $routeName = $this->pageRoutes[$pageKey] ?? null;
 
-        if ($routeName === null || ! \Illuminate\Support\Facades\Route::has($routeName)) {
+        if ($routeName === null || ! Route::has($routeName)) {
             return json_encode([
                 'success' => false,
                 'message' => 'Unknown or unavailable page key.',

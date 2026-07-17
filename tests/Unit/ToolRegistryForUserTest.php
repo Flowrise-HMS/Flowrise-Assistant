@@ -3,9 +3,10 @@
 namespace Modules\AI\Tests\Unit;
 
 use App\Models\User;
-use Modules\AI\Classes\Support\AssistantPermission;
+use Modules\AI\Ai\Tools\Clinical\SearchDiagnosisCodesTool;
 use Modules\AI\Classes\Services\ToolRegistry;
 use Modules\AI\Classes\Services\UserCapabilityProfile;
+use Modules\AI\Classes\Support\AssistantPermission;
 use Modules\Core\Models\Branch;
 use Spatie\Permission\Models\Role;
 
@@ -44,8 +45,8 @@ class ToolRegistryForUserTest extends AITestCase
         $receptionTools = collect(app(ToolRegistry::class)->forUser($receptionist))->map(fn ($tool) => $tool::class)->all();
 
         $this->assertGreaterThan(count($receptionTools), count($superTools));
-        $this->assertContains(\Modules\AI\Ai\Tools\Clinical\SearchDiagnosisCodesTool::class, $superTools);
-        $this->assertNotContains(\Modules\AI\Ai\Tools\Clinical\SearchDiagnosisCodesTool::class, $receptionTools);
+        $this->assertContains(SearchDiagnosisCodesTool::class, $superTools);
+        $this->assertNotContains(SearchDiagnosisCodesTool::class, $receptionTools);
     }
 
     public function test_user_capability_profile_includes_roles_and_permissions(): void

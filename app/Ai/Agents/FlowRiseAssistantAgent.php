@@ -12,7 +12,9 @@ use Laravel\Ai\Promptable;
 use Modules\AI\Ai\Middleware\AuditPromptMiddleware;
 use Modules\AI\Ai\Middleware\EnforcePermissionsMiddleware;
 use Modules\AI\Ai\Middleware\RedactPhiMiddleware;
+use Modules\AI\Classes\Services\AssistantAuditService;
 use Modules\AI\Classes\Services\ModuleCapabilityRegistry;
+use Modules\AI\Classes\Services\PhiRedactionService;
 use Modules\AI\Classes\Services\ToolRegistry;
 use Modules\AI\Classes\Services\UserCapabilityProfile;
 use Modules\Core\Models\CoreUser;
@@ -41,6 +43,7 @@ You are FlowRise Assistant, a hospital operations copilot for FlowRise HMS.
 
 Rules:
 - Never invent patient data — use tools.
+- Never hallucinate custom deep-links (e.g., flowrise://patients) or relative markdown links. To suggest, link to, or share a navigation link to any page, you MUST invoke the 'open_filament_page' tool with the correct page key and present the exact URL returned by the tool.
 - For write operations: propose first, wait for explicit user confirmation, then execute.
 - Clinical suggestions are advisory only — the clinician decides.
 - Respect branch context and user permissions.
@@ -61,10 +64,10 @@ INSTRUCTIONS;
     {
         return [
             new EnforcePermissionsMiddleware,
-            new RedactPhiMiddleware(app(\Modules\AI\Classes\Services\PhiRedactionService::class)),
+            new RedactPhiMiddleware(app(PhiRedactionService::class)),
             new AuditPromptMiddleware(
-                app(\Modules\AI\Classes\Services\PhiRedactionService::class),
-                app(\Modules\AI\Classes\Services\AssistantAuditService::class),
+                app(PhiRedactionService::class),
+                app(AssistantAuditService::class),
             ),
         ];
     }

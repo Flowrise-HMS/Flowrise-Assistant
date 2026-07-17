@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\Clinical\Enums\NoteType;
 use Modules\Patient\Models\Patient;
 use Stringable;
@@ -25,7 +26,7 @@ class ProposeCreateClinicalNoteTool implements Tool
             return $this->moduleUnavailable('clinical');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'propose_create_clinical_note')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'propose_create_clinical_note')) {
             return $this->denial('propose_create_clinical_note');
         }
 
@@ -40,7 +41,7 @@ class ProposeCreateClinicalNoteTool implements Tool
             'preview' => [
                 'patient_id' => $patient->id,
                 'encounter_id' => $request['encounter_id'] ?? null,
-                'note_type' => $request['note_type'] ?? NoteType::SOAP->value,
+                'note_type' => $request['note_type'] ?? NoteType::CONSULTATION->value,
                 'subject' => $request['subject'] ?? 'Consultation note',
                 'content' => $request['content'] ?? [],
             ],

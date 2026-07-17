@@ -6,6 +6,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Modules\AI\Ai\Tools\Concerns\InteractsWithAssistantUser;
+use Modules\AI\Classes\Services\ToolAuthorizationService;
 use Modules\Billing\Services\PatientBalanceQueryService;
 use Stringable;
 
@@ -24,7 +25,7 @@ class GetInvoiceBalanceTool implements Tool
             return $this->moduleUnavailable('billing');
         }
 
-        if (! app(\Modules\AI\Classes\Services\ToolAuthorizationService::class)->userCanRun($this->user, 'get_invoice_balance')) {
+        if (! app(ToolAuthorizationService::class)->userCanRun($this->user, 'get_invoice_balance')) {
             return $this->denial('get_invoice_balance');
         }
 

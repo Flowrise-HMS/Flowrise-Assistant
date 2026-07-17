@@ -48,16 +48,21 @@ class StreamAssistantTurnJob implements ShouldQueue
         try {
             $stream = $orchestrator->streamForBroadcast($user, $this->message, $conversationId);
 
+            $buffer = '';
             $stream
-                ->each(function ($event) use (&$fullText, &$conversationId, $user): void {
+                ->each(function ($event) use (&$fullText, &$conversationId, $user, &$buffer): void {
                     if (! $event instanceof TextDelta) {
                         return;
                     }
 
                     $fullText .= $event->delta;
+                    $buffer .= $event->delta;
 
-                    // Flush every delta for ChatGPT-style progressive rendering.
-                    $this->flushChunk($user->getAuthIdentifier(), $conversationId, $event->delta);
+                    // Flush in chunks of ~12 chars to reduce WebSocket traffic and frontend DOM rendering overhead
+                    if (strlen($buffer) >= 12) {
+                        $this->flushChunk($user->getAuthIdentifier(), $conversationId, $buffer);
+                        $buffer = '';
+                    }
                 })
                 ->then(function ($response) use (&$conversationId, &$fullText): void {
                     if (filled($response->conversationId ?? null)) {
@@ -68,6 +73,11 @@ class StreamAssistantTurnJob implements ShouldQueue
                         $fullText = (string) $response->text;
                     }
                 });
+
+            // Flush any remaining text in the buffer
+            if ($buffer !== '') {
+                $this->flushChunk($user->getAuthIdentifier(), $conversationId, $buffer);
+            }
 
             // Prefer conversation id resolved on the streamable response after iteration.
             if (filled($stream->conversationId)) {
