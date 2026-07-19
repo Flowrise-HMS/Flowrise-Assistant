@@ -3,6 +3,7 @@
 namespace Modules\AI\Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Modules\AI\Classes\Services\AssistantOrchestratorService;
 use Modules\AI\Classes\Services\AssistantProposalExecutor;
@@ -178,7 +179,7 @@ class AssistantChatWidgetTest extends AITestCase
 
         // Insert dummy message to the db message table
         $messagesTable = config('ai.conversations.tables.messages', 'agent_conversation_messages');
-        \Illuminate\Support\Facades\DB::table($messagesTable)->insert([
+        DB::table($messagesTable)->insert([
             'id' => 'msg-test-1',
             'conversation_id' => 'conv-test-999',
             'user_id' => $user->id,

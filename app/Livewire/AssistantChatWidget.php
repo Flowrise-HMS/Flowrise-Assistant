@@ -3,6 +3,7 @@
 namespace Modules\AI\Livewire;
 
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Livewire\Component;
@@ -258,7 +259,7 @@ class AssistantChatWidget extends Component
     {
         $messagesTable = config('ai.conversations.tables.messages', 'agent_conversation_messages');
 
-        $messages = \Illuminate\Support\Facades\DB::table($messagesTable)
+        $messages = DB::table($messagesTable)
             ->where('conversation_id', $this->conversationId)
             ->orderBy('created_at', 'asc')
             ->get();
@@ -266,6 +267,7 @@ class AssistantChatWidget extends Component
         $this->messages = $messages->map(function ($msg) {
             if ($msg->role === 'assistant') {
                 $proposal = $this->extractProposal($msg->content);
+
                 return [
                     'role' => 'assistant',
                     'content' => $proposal['message'] ?? $msg->content,
