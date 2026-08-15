@@ -3,8 +3,8 @@
 namespace Modules\AI\Classes\Services;
 
 use Modules\AI\Models\AssistantEmbedding;
-use Modules\Clinical\Models\DiagnosisCode;
 use Modules\Core\Models\Service;
+use Modules\Core\Support\OptionalClass;
 
 class OperationalEmbeddingIndexer
 {
@@ -12,24 +12,30 @@ class OperationalEmbeddingIndexer
     {
         $count = 0;
 
-        DiagnosisCode::query()
-            ->where('is_active', true)
-            ->orderBy('code')
-            ->chunkById(200, function ($codes) use (&$count) {
-                foreach ($codes as $code) {
-                    $content = trim("{$code->code} {$code->description}");
-                    AssistantEmbedding::query()->updateOrCreate(
-                        ['source_type' => 'diagnosis_code', 'source_id' => (string) $code->id],
-                        [
-                            'label' => $code->code,
-                            'content' => $content,
-                            'content_hash' => hash('sha256', $content),
-                            'embedding' => app(EmbeddingSearchService::class)->pseudoEmbeddingForStorage($content),
-                        ]
-                    );
-                    $count++;
-                }
-            });
+        OptionalClass::when(
+            'Modules\\Clinical\\Models\\DiagnosisCode',
+            function (string $diagnosisCodeClass) use (&$count): void {
+                $diagnosisCodeClass::query()
+                    ->where('is_active', true)
+                    ->orderBy('code')
+                    ->chunkById(200, function ($codes) use (&$count) {
+                        foreach ($codes as $code) {
+                            $content = trim("{$code->code} {$code->description}");
+                            AssistantEmbedding::query()->updateOrCreate(
+                                ['source_type' => 'diagnosis_code', 'source_id' => (string) $code->id],
+                                [
+                                    'label' => $code->code,
+                                    'content' => $content,
+                                    'content_hash' => hash('sha256', $content),
+                                    'embedding' => app(EmbeddingSearchService::class)->pseudoEmbeddingForStorage($content),
+                                ]
+                            );
+                            $count++;
+                        }
+                    });
+            },
+            'Clinical',
+        );
 
         Service::query()
             ->where('is_active', true)
