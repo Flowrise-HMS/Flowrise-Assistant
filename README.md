@@ -22,7 +22,7 @@ Depends on **Core** (`flowrise-hms/core`) and Laravel AI (`laravel/ai`; provider
 
 Turns are posted to `POST /assistant/turn` (web + auth; 404 when the feature is off, 403 without the permission) and processed synchronously in the request by `StreamAssistantTurnJob` (no queue worker needed for the turn itself; tokens are broadcast over Reverb as they arrive).
 
-Note: the keys in `Modules/AI/config/ai-assistant.php` (`AI_PHI_REDACTION_ENABLED`, `AI_AUDIT_ENABLED`, `AI_AUDIT_RETENTION_DAYS`) are currently inert because the file is merged as `config('ai.ai-assistant')` while the services read `config('ai-assistant.*')`; the built-in defaults (redaction on, audit on) always apply.
+The keys in `Modules/AI/config/ai-assistant.php` (`AI_PHI_REDACTION_ENABLED`, `AI_AUDIT_ENABLED`, `AI_AUDIT_RETENTION_DAYS`, documentation search and embedding sizes) are merged as `config('ai-assistant.*')` by `AIServiceProvider::register()`. `php artisan ai:prune-assistant-audit {--dry-run}` deletes `assistant_audit_logs` rows older than `AI_AUDIT_RETENTION_DAYS` (365) and runs daily through the scheduler.
 
 Tables: `assistant_audit_logs`, `documentation_chunks`, `assistant_embeddings`. Tests: `php artisan test --compact Modules/AI/tests` (12 files).
 
